@@ -1,11 +1,12 @@
 spconv_is_jetson: false
 spconv_version: 2.3.8
 spconv_cumm_version: 0.5.3
-# spconv_cpp release tag CUDA component:
-# - Ubuntu 24.04 (jazzy / CUDA 13.0) → cu130-rev1
-# - Ubuntu 22.04 (humble / CUDA 12.8) → cu128-rev1
-# Note: the cu130-rev1 branch is currently dormant — tasks/main.yaml
-# wraps its install steps in a block: with `when: != '24.04'` until the
-# upstream autowarefoundation/spconv_cpp cu130-rev1 release is published,
-# at which point the temporary guard is removed and this value takes effect.
-spconv_cuda_tag: "{{ 'cu130-rev1' if ansible_distribution_version == '24.04' else 'cu128-rev1' }}"
+# spconv_cpp release tag CUDA component (override with -e spconv_cuda_tag=…):
+# - CUDA 13.x → cu130-rev1 (plain arm64 debs)
+# - CUDA 12.x → cu128-rev1 (-sbsa / -jetson arm64 variants)
+# Follows cuda_version when passed via -e; otherwise mirrors cuda role defaults.
+spconv_cuda_tag: >-
+  {{
+    'cu130-rev1' if (cuda_version | default('13.0' if ansible_distribution_version == '24.04' else '12.8') | string) is match('^13\.')
+    else 'cu128-rev1'
+  }}
